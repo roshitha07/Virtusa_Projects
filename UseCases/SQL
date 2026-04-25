@@ -1,0 +1,70 @@
+create database Digital_Library;
+
+use Digital_Library;
+
+create table Books (
+    BookID int primary key,
+    Title varchar(100),
+    Author varchar(100),
+    Category varchar(50),
+    AvailableCopies int
+);
+
+create table Students (
+    StudentID int primary key,
+    StudentName varchar(100),
+    Email varchar(100),
+    JoinDate date
+);
+
+create table IssuedBooks( IssueID int primary key, BookID int,StudentID int,IssueDate date,ReturnDate date,
+                         foreign key(BookID) references Books(BookID),foreign key(StudentID) references Students(StudentID));
+
+insert into Books values
+(1, 'Java Programming', 'James Gosling', 'Science', 5),
+(2, 'World History', 'H.G. Wells', 'History', 4),
+(3, 'The Alchemist', 'Paulo Coelho', 'Fiction', 6),
+(4, 'Data Structures', 'Mark Allen', 'Science', 3),
+(5, 'Artificial Intelligence', 'Stuart Russell', 'Technology', 2);
+
+insert into Students values
+(101, 'Rahul Sharma', 'rahul@gmail.com', '2021-06-10'),
+(102, 'Anita Verma', 'anita@gmail.com', '2020-02-15'),
+(103, 'Ravi Kumar', 'ravi@gmail.com', '2019-08-20'),
+(104, 'Sneha Reddy', 'sneha@gmail.com', '2022-01-12'),
+(105, 'Arjun Patel', 'arjun@gmail.com', '2023-03-05');
+
+insert into IssuedBooks values
+(1, 1, 101, '2026-03-10', NULL),
+(2, 3, 102, '2026-03-28', '2026-04-01'),
+(3, 2, 103, '2026-03-01', NULL),
+(4, 4, 104, '2026-04-01', '2026-04-05'),
+(5, 5, 105, '2026-03-15', NULL);
+
+select
+    s.StudentID,
+    s.StudentName,
+    b.Title,
+    ib.IssueDate
+from IssuedBooks ib
+join Students s on ib.StudentID = s.StudentID
+join Books b on ib.BookID = b.BookID
+where ib.ReturnDate is null
+and ib.IssueDate < current_date() - interval '14' day;
+
+select
+    b.Category,
+    COUNT(*) as TotalBorrows
+from IssuedBooks ib
+join Books b on ib.BookID = b.BookID
+group by b.Category
+order by TotalBorrows desc;
+
+SET SQL_SAFE_UPDATES = 0;
+
+delete from Students
+where StudentID not in  (
+    select distinct StudentID
+    from IssuedBooks
+    where IssueDate >= current_date() - interval '3' year
+);
